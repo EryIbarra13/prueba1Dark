@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080808">
+<title>MALV-AI · Asistencia</title>
+<style>
+  :root { --verde: #25E314; }
+  html, body { margin: 0; background: #080808; }
+  body {
+    min-height: 100dvh; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    color: var(--verde); font-family: 'Courier New', Courier, monospace;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .container {
+    width: 100%; max-width: 650px; height: min(100dvh - 24px, 46rem);
+    display: flex; flex-direction: column; box-sizing: border-box;
+    background: #120000; border: 2px solid var(--verde); border-radius: 8px; padding: 16px;
+    box-shadow: 0 0 25px rgba(255, 0, 0, .4);
+  }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+  h1 { margin: 0; font-size: 1.15rem; text-shadow: 0 0 10px var(--verde); }
+
+  #chat {
+    flex: 1; min-height: 0; overflow-y: auto; box-sizing: border-box;
+    border: 1px solid #660000; background: #030000; padding: 14px;
+    font-size: 14px; line-height: 1.45;
+  }
+  .message { margin-bottom: 12px; white-space: pre-wrap; }
+  .ai { color: var(--verde); }
+  .user { color: #00ccff; }
+
+  #rapidas { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .input-group { display: flex; gap: 8px; }
+  input[type="text"] {
+    flex: 1; min-width: 0; background: #000; border: 1px solid var(--verde); color: #fff;
+    padding: 10px; font: inherit; font-size: 16px;   /* 16px evita el zoom automático en iPhone */
+  }
+  button {
+    font: inherit; font-weight: bold; color: #fff; background: #800000;
+    border: 1px solid var(--verde); padding: 10px 14px; cursor: pointer; touch-action: manipulation;
+  }
+  button:active { background: var(--verde); color: #000; }
+  button:focus-visible, input:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  @media (hover: hover) { button:hover { background: var(--verde); color: #000; } }
+  #rapidas button { background: #000; color: var(--verde); font-size: 13px; padding: 8px 12px; }
+  #voz { font-size: 12px; padding: 6px 10px; background: #000; color: var(--verde); }
+
+  nav { display: flex; gap: 8px; margin-top: 12px; }
+  nav button { flex: 1; background: #000; color: var(--verde); font-size: 13px; padding: 10px 6px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>[ MYSTERIO SYSTEMS ]</h1>
+    <button id="voz" type="button">🔊 Voz: sí</button>
+  </header>
+
+  <div id="chat" aria-live="polite"></div>
+
+  <div id="rapidas"></div>
+
+  <div class="input-group">
+    <input type="text" id="entrada" placeholder="Escribe tu pregunta..." autocomplete="off">
+    <button id="enviar" type="button">Enviar</button>
+  </div>
+
+  <nav>
+    <button type="button" data-ir="galeria.html">Galería</button>
+    <button type="button" data-ir="album.html">Álbum</button>
+    <button type="button" data-ir="AR.html">Cámara AR</button>
+  </nav>
+</div>
+
+<script src="catalogo.js"></script>
+<script>
+  /* ============ CONFIGURACIÓN ============ */
+  const CLAVE_GUARDADO = "galeria_desbloqueados";   // la misma que usan AR.html y album.html
+  const TONO = 0.4;        // voz: más bajo = más grave
+  const VELOCIDAD = 0.95;
+  /* ======================================= */
+
+  const quitar = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const azar = a => a[Math.floor(Math.random() * a.length)];
+
+  /* ---- Estado real del recorrido (lo que el visitante ya desbloqueó) ---- */
+  function estado() {
+    let abiertos = [];
+    try { abiertos = JSON.parse(localStorage.getItem(CLAVE_GUARDADO)) || []; } catch (e) {}
+    return CATALOGO.map(p => ({ ...p, escaneado: abiertos.includes(p.id) }));
+  }
+
+  /* ---- Respuestas ---- */
+  const R = {
+    saludo: () => "Vaya, otro humano atrapado en mi galería. Puedo decirte cuánto llevas, darte pistas, ayudarte con la cámara o mostrarte a los artistas. Elige un botón o escribe, y no me hagas perder el tiempo.",
+
+    progreso() {
+      const e = estado(), ok = e.filter(x => x.escaneado), faltan = e.filter(x => !x.escaneado);
+      if (!e.length) return "Mi base de datos está vacía. Ni siquiera yo puedo juzgarte todavía.";
+      if (!faltan.length) return "Las escaneaste todas... Impresionante para un humano. Me da asco admitirlo.";
+      const pct = Math.round(ok.length / e.length * 100);
+      return `${azar(["Veamos tus mediocres avances.", "Cuento tus logros, que no son muchos.", "Tu progreso, mortal:"])}\n` +
+             `Llevas ${ok.length} de ${e.length} (${pct}%). Te faltan ${faltan.length}.` +
+             (ok.length ? `\nYa tienes: ${ok.map(x => x.nombre).join(", ")}.` : "\nTodavía no has escaneado nada. Patético.");
+    },
+
+    pistas() {
+      const faltan = estado().filter(x => !x.escaneado);
+      if (!faltan.length) return "No te queda nada por buscar. Ya no tengo pistas para ti... qué lástima.";
+      return "Escucha bien, no lo repetiré:\n" + faltan.map(x => `• ${x.nombre}: ${x.pista || "Sin pista disponible."}`).join("\n");
+    },
+
+    camara: () => "Si la cámara te da problemas, sigue esto:\n" +
+      "• Da permiso de cámara al navegador.\n" +
+      "• Limpia el lente.\n" +
+      "• Sostén el teléfono firme, con buena luz, a 30-50 cm de la imagen.\n" +
+      "• Centra la imagen dentro del visor.\n" +
+      "• Si la pantalla se ve negra, cierra la pestaña y ábrela de nuevo.",
+
+    artistas() {
+      const e = estado(), ok = e.filter(x => x.escaneado);
+      if (!ok.length) return "Aún no has descubierto ninguna obra, así que no hay artistas que mostrarte. Escanea algo y vuelve.";
+      return "Las mentes detrás de lo que has descubierto:\n" + ok.map(x => `• ${x.nombre}: ${x.autor}`).join("\n") +
+             (ok.length < e.length ? "\nLos demás se revelarán cuando los encuentres." : "") +
+             "\nPara más detalles, toca la pieza en el álbum.";
+    },
+
+    ayuda: () => "Es simple: usa la cámara AR para escanear las imágenes de la galería. Cada una que detectes se desbloquea en el álbum, donde puedes tocarla para ver a su autor. Yo te digo tu progreso, te doy pistas y te ayudo con la cámara.",
+
+    pieza(p) {
+      return p.escaneado
+        ? `${p.nombre}: ya la tienes. Obra de ${p.autor}. Toca la pieza en el álbum para ver más.`
+        : `${p.nombre} sigue sin ser tuya.\nPista: ${p.pista || "Sin pista disponible."}`;
+    },
+
+    nada: () => azar([
+      "No entendí eso, mortal. Usa los botones de arriba.",
+      "Tu pregunta me aburre y no la comprendo. Prueba con: progreso, pistas, cámara o artistas."
+    ])
+  };
+
+  /* ---- Reconocer qué pide el visitante ---- */
+  function responder(texto) {
+    const t = quitar(texto);
+    const pieza = estado().find(p => p.nombre.length >= 3 && t.includes(quitar(p.nombre)));
+    if (pieza)                                                      return R.pieza(pieza);
+    if (/camara|escane|permiso|pantalla negra|enfoc|no funciona|no detecta/.test(t)) return R.camara();
+    if (/pista|donde|encuentr|buscar|ubicac/.test(t))               return R.pistas();
+    if (/artista|autor|creador|quien (hizo|creo|dibujo)/.test(t))   return R.artistas();
+    if (/progreso|avance|cuant|llevo|falta|escaneado/.test(t))      return R.progreso();
+    if (/que hago|como funciona|ayuda|instruc|album|sistema|ayudame|explica/.test(t)) return R.ayuda();
+    if (/^(hola|buenas|hey|saludos)/.test(t))                       return R.saludo();
+    return R.nada();
+  }
+
+  /* ---- INTERFAZ ---- */
+  const chat = document.getElementById("chat");
+  const entrada = document.getElementById("entrada");
+  let vozActiva = true;
+
+  function agregar(clase, quien, texto) {
+    const d = document.createElement("div");
+    d.className = "message " + clase;
+    const s = document.createElement("strong"); s.textContent = quien + ": ";
+    d.append(s, document.createTextNode(texto));
+    chat.append(d);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function elegirVoz() {
+    const v = speechSynthesis.getVoices().filter(x => x.lang.toLowerCase().startsWith("es"));
+    const masc = /jorge|diego|juan|pablo|carlos|raul|raúl|miguel|enrique|male|hombre/i;
+    return v.find(x => /es-MX/i.test(x.lang) && masc.test(x.name)) || v.find(x => masc.test(x.name))
+        || v.find(x => /es-MX/i.test(x.lang)) || v[0] || null;
+  }
+
+  function hablar(texto) {
+    if (!vozActiva || !("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto.replace(/[•\n]+/g, ". "));
+    const voz = elegirVoz();
+    u.lang = voz ? voz.lang : "es-MX";
+    if (voz) u.voice = voz;
+    u.pitch = TONO; u.rate = VELOCIDAD;
+    speechSynthesis.speak(u);
+  }
+
+  function enviar(texto) {
+    texto = texto.trim();
+    if (!texto) return;
+    agregar("user", "Tú", texto);
+    entrada.value = "";
+    const respuesta = responder(texto);
+    setTimeout(() => { agregar("ai", "MALV-AI", respuesta); hablar(respuesta); }, 350);
+  }
+
+  // Botones rápidos
+  [["Mi progreso", "progreso"], ["Pistas", "pistas"], ["Ayuda con la cámara", "cámara"],
+   ["Artistas", "artistas"], ["¿Qué hago aquí?", "ayuda"]].forEach(([etiqueta, clave]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = etiqueta;
+    b.onclick = () => enviar(clave === "ayuda" ? "ayuda" : clave);
+    document.getElementById("rapidas").append(b);
+  });
+
+  document.getElementById("enviar").onclick = () => enviar(entrada.value);
+  entrada.addEventListener("keydown", e => { if (e.key === "Enter") enviar(entrada.value); });
+  document.getElementById("voz").onclick = e => {
+    vozActiva = !vozActiva;
+    if (!vozActiva && "speechSynthesis" in window) speechSynthesis.cancel();
+    e.currentTarget.textContent = vozActiva ? "🔊 Voz: sí" : "🔇 Voz: no";
+  };
+  document.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => { location.href = b.dataset.ir; });
+
+  agregar("ai", "MALV-AI", R.saludo());
+</script>
+</body>
+</html>
