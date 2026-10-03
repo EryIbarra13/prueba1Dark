@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Galería</title>
+<style>
+  html, body { min-height: 100%; margin: 0; background: #000; }
+  body {
+    min-height: 100dvh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.5rem;
+    padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    font-family: Georgia, "Times New Roman", serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .caja {
+    width: min(100%, 36rem);
+    box-sizing: border-box;
+    padding: 1.75rem 1.5rem;
+    background: #1fa23a;      /* color del rectángulo verde */
+    color: #031a08;
+    font-size: 1.1rem; line-height: 1.6;
+    box-shadow: 0 0 40px rgba(31, 162, 58, .35);
+  }
+  .caja p { margin: 0; }
+
+  .menu {
+    width: min(100%, 36rem);
+    display: flex; flex-direction: column; gap: .9rem;
+    opacity: 0; visibility: hidden; transform: translateY(8px);
+    transition: opacity .6s ease, transform .6s ease, visibility .6s;
+  }
+  .menu.visible { opacity: 1; visibility: visible; transform: none; }
+
+  .menu button {
+    font: inherit; font-size: 1.15rem; font-weight: 700;
+    min-height: 3.5rem; width: 100%;
+    color: #1fa23a; background: #000;
+    border: 2px solid #1fa23a; border-radius: 0;
+    cursor: pointer; touch-action: manipulation;
+    transition: background .2s, color .2s;
+  }
+  .menu button:active { background: #1fa23a; color: #000; }
+  .menu button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  @media (hover: hover) { .menu button:hover { background: #1fa23a; color: #000; } }
+
+  #saltar {
+    font: inherit; font-size: .9rem; color: #5d7a63; background: none; border: 0;
+    padding: .5rem 1rem; cursor: pointer; text-decoration: underline;
+  }
+  #saltar[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { .menu, .menu button { transition: none; } }
+</style>
+</head>
+<body>
+
+  <div class="caja">
+    <p id="texto">Bienvenido a mi galería de arte. Desgraciadamente, por ser un entrometido, estás atrapado y no podrás huir hasta que escanees una y cada una de mis grotescas obras de arte. Quizás encuentres uno que otro artículo interesante por ahí. Si necesitas ayuda, revisa el álbum o pide ayuda a mi asistente. Si intentas escapar, créeme que lo sabré. En fin, diviértete en mi horrible tortura.</p>
+  </div>
+
+  <div class="menu" id="menu">
+    <button type="button" data-go="album">Álbum</button>
+    <button type="button" data-go="asistencia">Asistencia</button>
+    <button type="button" data-go="ar">Abrir cámara AR</button>
+  </div>
+
+  <button id="saltar" type="button">Saltar narración</button>
+
+<script>
+  /* ============ CONFIGURACIÓN ============ */
+  const PAGINAS = {
+    album:      "album.html",
+    asistencia: "asistencia.html",
+    ar:         "AR.html"
+  };
+  const TONO = 0.6;        // más bajo = voz más grave (0 a 2)
+  const VELOCIDAD = 0.88;  // más bajo = más lento (0.1 a 10)
+  /* ======================================= */
+
+  const menu = document.getElementById("menu");
+  const saltar = document.getElementById("saltar");
+  const texto = document.getElementById("texto").textContent.trim();
+
+  document.querySelectorAll("[data-go]").forEach(b =>
+    b.addEventListener("click", () => { window.location.href = PAGINAS[b.dataset.go]; })
+  );
+
+  function mostrarMenu() {
+    menu.classList.add("visible");
+    saltar.hidden = true;
+  }
+
+  saltar.addEventListener("click", () => {
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+    mostrarMenu();
+  });
+
+  /* ---- Voz masculina en español ---- */
+  const NOMBRES_MASCULINOS = /jorge|diego|juan|pablo|carlos|raul|raúl|miguel|enrique|male|hombre/i;
+
+  function elegirVoz() {
+    const voces = speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith("es"));
+    return voces.find(v => /es-MX/i.test(v.lang) && NOMBRES_MASCULINOS.test(v.name))
+        || voces.find(v => NOMBRES_MASCULINOS.test(v.name))
+        || voces.find(v => /es-MX/i.test(v.lang))
+        || voces[0] || null;
+  }
+
+  let iniciada = false;
+
+  function narrar() {
+    if (iniciada) return;
+    iniciada = true;
+    speechSynthesis.cancel();
+    const voz = elegirVoz();
+    // Se divide en frases: evita que el navegador corte la lectura a media frase
+    const frases = texto.match(/[^.]+\.?/g).map(s => s.trim()).filter(Boolean);
+    frases.forEach((frase, i) => {
+      const u = new SpeechSynthesisUtterance(frase);
+      u.lang = voz ? voz.lang : "es-MX";
+      if (voz) u.voice = voz;
+      u.pitch = TONO;
+      u.rate = VELOCIDAD;
+      if (i === frases.length - 1) u.onend = mostrarMenu;
+      u.onerror = e => {
+        if (e.error === "not-allowed") iniciada = false;          // el navegador pide un toque primero
+        else if (e.error !== "canceled" && e.error !== "interrupted") mostrarMenu();
+      };
+      speechSynthesis.speak(u);
+    });
+  }
+
+  if (!("speechSynthesis" in window)) {
+    mostrarMenu();
+  } else {
+    const arrancar = () => setTimeout(narrar, 400);
+    if (speechSynthesis.getVoices().length) arrancar();
+    else speechSynthesis.addEventListener("voiceschanged", arrancar, { once: true });
+    // Si el celular bloquea el audio automático, empieza con el primer toque
+    document.addEventListener("pointerdown", narrar, { once: true });
+  }
+</script>
+</body>
+</html>

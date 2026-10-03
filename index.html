@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Inicio</title>
+<style>
+  html, body { height: 100%; margin: 0; background: #000; }
+  body {
+    overflow: hidden;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  #bg {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    height: 100dvh;           /* alto real en celular (descuenta la barra del navegador) */
+    object-fit: cover;        /* cover = llena la pantalla | contain = se ve completo con barras negras */
+    object-position: center;  /* qué parte del video se queda visible al recortar */
+    z-index: 0;
+  }
+
+  .actions {
+    position: fixed; left: 0; right: 0; z-index: 1;
+    bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    padding: 0 1.5rem;
+    display: flex; justify-content: center;
+  }
+
+  #start {
+    font: inherit; font-size: 1.15rem; font-weight: 600; letter-spacing: .02em;
+    color: #00ff0d; background: rgba(255, 255, 255, .15);
+    border: 2px solid #440a6b; border-radius: 999px;
+    width: min(100%, 20rem); min-height: 3.5rem;   /* área cómoda para el dedo */
+    cursor: pointer; touch-action: manipulation;
+    background-color: #6f10af;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: background .2s, color .2s, transform .15s;
+  }
+  #start:active { background: #070707; color: #fcfcfc; transform: scale(.97); }
+  #start:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+  @media (hover: hover) { #start:hover { background: #000000; color: #ffffff; } }
+  @media (prefers-reduced-motion: reduce) { #start { transition: none; } }
+</style>
+</head>
+<body>
+
+  <!-- El src del video y la página de destino se cambian en el script de abajo -->
+  <video id="bg" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>
+
+  <div class="actions">
+    <button id="start" type="button">ENTRAR EN EL ESPEJISMO</button>
+  </div>
+
+<script>
+  /* ============ CONFIGURACIÓN ============ */
+  const VIDEO_SRC = "pruebas.mp4";     // video de fondo
+  const NEXT_PAGE = "siguiente.html";  // página a la que lleva el botón
+  /* ======================================= */
+
+  const video = document.getElementById("bg");
+  video.muted = true;                  // necesario para el autoplay en iPhone/Android
+  video.src = VIDEO_SRC;
+  video.play().catch(() => {
+    // Si el celular (p. ej. modo ahorro de batería) bloquea el autoplay, arranca con el primer toque
+    const retry = () => video.play();
+    document.addEventListener("touchstart", retry, { once: true });
+    document.addEventListener("click", retry, { once: true });
+  });
+
+  document.getElementById("start").addEventListener("click", () => {
+    window.location.href = NEXT_PAGE;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Álbum</title>
+<style>
+  :root { --verde: #1fa23a; --tenue: #5d7a63; }
+  html, body { margin: 0; background: #000; }
+  body {
+    min-height: 100dvh;
+    color: #cfe9d3;
+    font-family: Georgia, "Times New Roman", serif;
+    -webkit-tap-highlight-color: transparent;
+    padding: 1.5rem 1.25rem calc(6.5rem + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+  main { max-width: 36rem; margin: 0 auto; }
+  h1 { margin: 0 0 1.5rem; font-size: 1.8rem; color: var(--verde); }
+
+  section { margin-bottom: 2rem; }
+  .titulo { display: flex; justify-content: space-between; align-items: baseline;
+            border-bottom: 2px solid var(--verde); padding-bottom: .4rem; margin-bottom: 1rem; }
+  .titulo h2 { margin: 0; font-size: 1.25rem; color: #fff; }
+  .titulo span { color: var(--tenue); font-size: .95rem; }
+  .vacio { color: var(--tenue); margin: 0; }
+
+  .rejilla { display: grid; grid-template-columns: repeat(2, 1fr); gap: .9rem; }
+  .pieza { font: inherit; color: inherit; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; touch-action: manipulation; }
+  .marco {
+    display: flex; align-items: center; justify-content: center;
+    aspect-ratio: 4 / 5; overflow: hidden; box-sizing: border-box;
+    border: 2px solid var(--verde); background: #07120a;
+  }
+  .pieza.bloqueada .marco { border-style: dashed; border-color: #2c5b36; color: #2c5b36; }
+  .marco img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .marco svg { width: 34%; height: auto; }
+  .nombre { display: block; margin-top: .4rem; font-size: .95rem; color: #fff; }
+  .pieza.bloqueada .nombre { color: var(--tenue); }
+  .pieza:focus-visible .marco { outline: 3px solid #fff; outline-offset: 2px; }
+  @media (hover: hover) { .pieza:not(.bloqueada):hover .marco { box-shadow: 0 0 18px rgba(31,162,58,.6); } }
+
+  /* Ventana de información */
+  dialog {
+    width: min(92vw, 30rem); max-height: 88dvh; overflow: auto; box-sizing: border-box;
+    background: #07120a; color: #cfe9d3; border: 2px solid var(--verde); padding: 0;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.8); }
+  .info img { width: 100%; max-height: 50dvh; object-fit: contain; display: block; background: #000; }
+  .info .texto { padding: 1.1rem 1.25rem 1.25rem; }
+  .info h3 { margin: 0 0 .8rem; font-size: 1.35rem; color: #fff; }
+  .info dt { color: var(--tenue); font-size: .85rem; margin-top: .7rem; }
+  .info dd { margin: .1rem 0 0; line-height: 1.5; }
+  .info a { color: var(--verde); }
+  .info .candado { padding: 2rem 1.25rem 0; text-align: center; color: var(--verde); }
+  .info .candado svg { width: 3rem; }
+  .cerrar { display: block; width: calc(100% - 2.5rem); margin: 0 1.25rem 1.25rem; }
+
+  button.btn {
+    font: inherit; font-size: 1.05rem; font-weight: 700; min-height: 3.2rem;
+    color: var(--verde); background: #000; border: 2px solid var(--verde); cursor: pointer; touch-action: manipulation;
+  }
+  button.btn:active { background: var(--verde); color: #000; }
+  button.btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  @media (hover: hover) { button.btn:hover { background: var(--verde); color: #000; } }
+
+  /* Barra inferior */
+  nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+    display: flex; gap: .75rem; justify-content: center;
+    padding: .9rem 1.25rem calc(.9rem + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, #000 70%, rgba(0,0,0,0));
+  }
+  nav .btn { flex: 1; max-width: 16rem; }
+</style>
+</head>
+<body>
+
+<main>
+  <h1>Álbum</h1>
+  <div id="secciones"></div>
+</main>
+
+<nav>
+  <button class="btn" type="button" id="ir-galeria">Regresar a la galería</button>
+  <button class="btn" type="button" id="ir-ar">Ir a la cámara AR</button>
+</nav>
+
+<dialog id="detalle"><div class="info" id="detalle-contenido"></div></dialog>
+
+<script src="catalogo.js"></script>
+<script>
+  /* ============ CONFIGURACIÓN ============ */
+  const PAGINA_GALERIA = "galeria.html";
+  const PAGINA_AR      = "AR.html";
+  const CLAVE_GUARDADO = "galeria_desbloqueados";   // la misma clave se usa en AR.html
+  /* ======================================= */
+
+  const ICONO_CANDADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+
+  document.getElementById("ir-galeria").onclick = () => { location.href = PAGINA_GALERIA; };
+  document.getElementById("ir-ar").onclick      = () => { location.href = PAGINA_AR; };
+
+  function leerDesbloqueados() {
+    try { return JSON.parse(localStorage.getItem(CLAVE_GUARDADO)) || []; }
+    catch (e) { return []; }
+  }
+
+  function el(tag, clase, texto) {
+    const n = document.createElement(tag);
+    if (clase) n.className = clase;
+    if (texto !== undefined) n.textContent = texto;
+    return n;
+  }
+
+  const secciones = document.getElementById("secciones");
+  const detalle = document.getElementById("detalle");
+  const contenido = document.getElementById("detalle-contenido");
+
+  function dibujar() {
+    const abiertos = new Set(leerDesbloqueados());
+    secciones.replaceChildren();
+
+    CATEGORIAS.forEach(cat => {
+      const piezas = CATALOGO.filter(p => p.categoria === cat.id);
+      const sec = el("section");
+      const cab = el("div", "titulo");
+      cab.append(el("h2", "", cat.titulo),
+                 el("span", "", `${piezas.filter(p => abiertos.has(p.id)).length}/${piezas.length}`));
+      sec.append(cab);
+
+      if (!piezas.length) {
+        sec.append(el("p", "vacio", cat.vacio));
+      } else {
+        const rej = el("div", "rejilla");
+        piezas.forEach(p => {
+          const abierta = abiertos.has(p.id);
+          const b = el("button", "pieza" + (abierta ? "" : " bloqueada"));
+          b.type = "button";
+          const marco = el("div", "marco");
+          if (abierta) {
+            const img = el("img");
+            img.src = p.imagen; img.alt = p.nombre; img.loading = "lazy";
+            marco.append(img);
+          } else {
+            marco.innerHTML = ICONO_CANDADO;
+          }
+          b.append(marco, el("span", "nombre", abierta ? p.nombre : "???"));
+          b.onclick = () => abrirDetalle(p, abierta);
+          rej.append(b);
+        });
+        sec.append(rej);
+      }
+      secciones.append(sec);
+    });
+  }
+
+  function abrirDetalle(p, abierta) {
+    contenido.replaceChildren();
+    if (!abierta) {
+      const c = el("div", "candado");
+      c.innerHTML = ICONO_CANDADO;
+      c.append(el("p", "", "Esta pieza sigue bloqueada. Escanéala con la cámara AR para desbloquearla."));
+      contenido.append(c);
+    } else {
+      const img = el("img"); img.src = p.imagen; img.alt = p.nombre;
+      const t = el("div", "texto");
+      t.append(el("h3", "", p.nombre));
+      const dl = el("dl");
+      const campo = (k, v) => { if (v) { dl.append(el("dt", "", k), el("dd", "", v)); } };
+      campo("Autor", p.autor);
+      campo("Descripción", p.descripcion);
+      (p.enlaces || []).filter(l => /^https?:\/\//i.test(l.url)).forEach(l => {
+        const a = el("a", "", l.texto); a.href = l.url; a.target = "_blank"; a.rel = "noopener";
+        const dd = el("dd"); dd.append(a); dl.append(el("dt", "", "Enlace"), dd);
+      });
+      t.append(dl);
+      contenido.append(img, t);
+    }
+    const x = el("button", "btn cerrar", "Cerrar");
+    x.type = "button"; x.onclick = () => detalle.close();
+    contenido.append(x);
+    detalle.showModal();
+  }
+
+  // Tocar fuera de la ventana la cierra
+  detalle.addEventListener("click", e => { if (e.target === detalle) detalle.close(); });
+
+  dibujar();
+  window.addEventListener("pageshow", dibujar);   // se actualiza al volver desde la cámara AR
+</script>
+</body>
+</html>
