@@ -15,33 +15,33 @@ const CATEGORIAS = [
 
 const CATALOGO = [
   {
-    id: "marcador_A",
+    id: "",
     categoria: "ilustraciones",
-    nombre: "Goku",
-    imagen: "goku.jpg",
+    nombre: "",
+    imagen: "Calabera.jpg",
     autor: "Nombre del autor",
     descripcion: "Descripción de la obra.",
-    pista: "Escribe aquí la pista para encontrar esta pieza.",
+    pista: "Un hermoso esqueleto mientras una mujer lo observa.",
     enlaces: [ /* { texto: "Instagram", url: "https://instagram.com/usuario" } */ ]
   },
   {
-    id: "marcador_B",
+    id: "Charro",
     categoria: "ilustraciones",
-    nombre: "Clancy",
-    imagen: "imagenB.jpg",
+    nombre: "Charro Negro",
+    imagen: "CharroNegro.jpg",
     autor: "Nombre del autor",
     descripcion: "Descripción de la obra.",
-    pista: "Escribe aquí la pista para encontrar esta pieza.",
+    pista: "Una inigualable leyenda mexicana.",
     enlaces: []
   },
   {
-    id: "marcador_C",
+    id: "osito",
     categoria: "ilustraciones",
     nombre: "Ilustración C",
-    imagen: "imagenC.jpg",
+    imagen: "Osito.jpg",
     autor: "Nombre del autor",
     descripcion: "Descripción de la obra.",
-    pista: "Escribe aquí la pista para encontrar esta pieza.",
+    pista: "Un adorable animalito en una situacion un poco complicada.",
     enlaces: []
   },
   {
@@ -54,6 +54,16 @@ const CATALOGO = [
     pista: "Escribe aquí la pista para encontrar esta pieza.",
     enlaces: []
   }
+   ,}
+    id: "Spring",
+    categoria: "artilugios",
+    nombre: "SpringTramp",
+    imagen: "Mysterio1.jpg",
+    autor: "Ery Ibarra",
+    descripcion: "Cabeza de un animatronico.",
+    pista: "Un extraño sujeto se la puso una vez y no vivio para contarlo.",
+    enlaces: []
+   }
   /* Ejemplo de artilugio (quita los comentarios para usarlo):
   ,{
     id: "artilugio_1",
