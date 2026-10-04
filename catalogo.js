@@ -17,7 +17,7 @@ const CATALOGO = [
   {
     id: "Calabera",
     categoria: "ilustraciones",
-    nombre: "",
+    nombre: "Calabera",
     imagen: "Calabera.jpg",
     autor: "Nombre del autor",
     descripcion: "Descripción de la obra.",
