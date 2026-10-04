@@ -54,7 +54,7 @@ const CATALOGO = [
     pista: "Escribe aquí la pista para encontrar esta pieza.",
     enlaces: []
   }
-   ,}
+   ,{
     id: "Spring",
     categoria: "artilugios",
     nombre: "Springtramp",
