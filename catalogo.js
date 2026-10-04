@@ -15,10 +15,10 @@ const CATEGORIAS = [
 
 const CATALOGO = [
   {
-    id: "Calabera",
+    id: "Calavera",
     categoria: "ilustraciones",
-    nombre: "Calabera",
-    imagen: "Calabera.jpg",
+    nombre: "Calavera",
+    imagen: "Calavera.png",
     autor: "Nombre del autor",
     descripcion: "Descripción de la obra.",
     pista: "Un hermoso esqueleto mientras una mujer lo observa.",
