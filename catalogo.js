@@ -42,7 +42,7 @@ const CATALOGO = [
     autor: "Bombon Skylos",
     descripcion: "Trata de retratar de forma cruda y literal a mi personaje regalando su corazon.",
     pista: "No hay nada mas tierno que alguien regalando su corazon.",
-    enlaces: [url:"https:/www.instagram.com/bombon_skylos?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="]
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/bombon_skylos" }]
   },
   {
     id: "marcador_D",
@@ -53,8 +53,8 @@ const CATALOGO = [
     descripcion: "Descripción de la obra.",
     pista: "Escribe aquí la pista para encontrar esta pieza.",
     enlaces: []
-  }
-   ,{
+  },
+  {
     id: "Spring",
     categoria: "artilugios",
     nombre: "Springtramp",
