@@ -58,7 +58,7 @@ const CATALOGO = [
     id: "Spring",
     categoria: "artilugios",
     nombre: "Springtramp",
-    imagen: "Mysterio1.jpg",
+    imagen: "goku.jpg",
     autor: "Ery Ibarra",
     descripcion: "Cabeza de un animatronico.",
     pista: "Un extraño sujeto se la puso una vez y no vivio para contarlo.",
