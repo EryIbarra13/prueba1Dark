@@ -35,10 +35,10 @@ const CATALOGO = [
     enlaces: []
   },
   {
-    id: "osito",
+    id: "Osito",
     categoria: "ilustraciones",
     nombre: "Mi corazon te lo regalo",
-    imagen: "Osito.jpg",
+    imagen: "Osito.png",
     autor: "Bombon Skylos",
     descripcion: "Trata de retratar de forma cruda y literal a mi personaje regalando su corazon.",
     pista: "No hay nada mas tierno que alguien regalando su corazon.",
