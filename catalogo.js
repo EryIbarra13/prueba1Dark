@@ -27,10 +27,10 @@ const CATALOGO = [
   {
     id: "Charro",
     categoria: "ilustraciones",
-    nombre: "Charro Negro",
+    nombre: "El Charro Negro",
     imagen: "CharroNegro.jpg",
-    autor: "Nombre del autor",
-    descripcion: "Descripción de la obra.",
+    autor: "Grecia Morales (Suki)",
+    descripcion: "Las monedas de oro que brillan en la penumbra, son pagadas con el precio del alma.",
     pista: "Una inigualable leyenda mexicana.",
     enlaces: []
   },
