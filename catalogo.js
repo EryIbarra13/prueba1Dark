@@ -45,14 +45,24 @@ const CATALOGO = [
     enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/bombon_skylos" }]
   },
   {
-    id: "marcador_D",
+    id: "Retrato",
     categoria: "ilustraciones",
-    nombre: "Ilustración D",
-    imagen: "imagenD.jpg",
-    autor: "Nombre del autor",
-    descripcion: "Descripción de la obra.",
-    pista: "Escribe aquí la pista para encontrar esta pieza.",
-    enlaces: []
+    nombre: "Retrato Oval",
+    imagen: "Retrato.jpg",
+    autor: "Fatima Belem Villanueva Martinez",
+    descripcion: "Al final de la noche, el hambre prevalece.",
+    pista: "Un retrato de una persona formal.",
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/just_an_emo_bird" }]
+  },
+   {
+    id: "Ryze",
+    categoria: "ilustraciones",
+    nombre: "Ryze",
+    imagen: "Ryze.jpg",
+    autor: "Leslie synyster",
+    descripcion: "Una interpretacion mas realista al personaje Ryze de Tokyo Ghoul.",
+    pista: "Aveces la cita puede dar un cambio brutal.",
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/digitalpeperonni" }]
   },
   {
     id: "Spring",
@@ -62,7 +72,7 @@ const CATALOGO = [
     autor: "Ery Ibarra",
     descripcion: "Cabeza de un animatronico.",
     pista: "Un extraño sujeto se la puso una vez y no vivio para contarlo.",
-    enlaces: []
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/thesheko13" }]
    }
   /* Ejemplo de artilugio (quita los comentarios para usarlo):
   ,{
