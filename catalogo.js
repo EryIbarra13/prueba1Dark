@@ -32,7 +32,7 @@ const CATALOGO = [
     autor: "Grecia Morales (Suki)",
     descripcion: "Las monedas de oro que brillan en la penumbra, son pagadas con el precio del alma.",
     pista: "Una inigualable leyenda mexicana.",
-    enlaces: []
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/suki_owo_" }]
   },
   {
     id: "Osito",
@@ -63,6 +63,16 @@ const CATALOGO = [
     descripcion: "Una interpretacion mas realista al personaje Ryze de Tokyo Ghoul.",
     pista: "Aveces la cita puede dar un cambio brutal.",
     enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/digitalpeperonni" }]
+  },
+   {
+    id: "MM",
+    categoria: "ilustraciones",
+    nombre: "Michael Myers",
+    imagen: "MM.jpg",
+    autor: "",
+    descripcion: "",
+    pista: "Despierta cada año en halloween",
+    enlaces: [{ texto: "Instagram", url: "" }]
   },
   {
     id: "Spring",
