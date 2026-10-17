@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Scare Cam AR - Multi Target</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0a0a;color:#fff;font-family:'Segoe UI',sans-serif;overflow:hidden;width:100vw;height:100vh;touch-action:none}
+
+    #splash{position:fixed;inset:0;z-index:100;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:2rem;text-align:center;transition:opacity .5s}
+    #splash.hidden{opacity:0;pointer-events:none}
+    #splash h1{font-size:clamp(1.8rem,7vw,2.4rem);color:#ff2222;text-shadow:0 0 24px #ff000077;letter-spacing:.06em}
+    #splash p{color:#999;font-size:.9rem;max-width:300px;line-height:1.6}
+    
+    .previews-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin:8px 0}
+    .img-frame{border:2px solid #ff2222;border-radius:10px;padding:4px;box-shadow:0 0 15px #ff000044;width:80px;height:100px;overflow:hidden;flex-shrink:0}
+    .img-frame img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+    
+    #start-btn{background:#cc0000;color:#fff;border:none;border-radius:8px;padding:14px 36px;font-size:1rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;box-shadow:0 0 20px #ff000055;width:100%;max-width:280px}
+    #start-btn:active{background:#ff1111;transform:scale(.97)}
+
+    /* Cámara */
+    #cam-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;display:none}
+    #cam-video.active{display:block}
+
+    /* Canvas AR encima de la cámara */
+    #ar-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:2;display:none;pointer-events:none}
+    #ar-canvas.active{display:block}
+
+    /* HUD */
+    #hud{position:fixed;bottom:28px;left:0;right:0;z-index:10;display:none;justify-content:center;pointer-events:none}
+    #hud.visible{display:flex}
+    #hud-pill{background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 20px;font-size:13px;color:#ccc;backdrop-filter:blur(6px);transition:all .3s}
+    #hud-pill.found{color:#ff4444;border-color:rgba(255,68,68,.3)}
+
+    /* Visor de enfoque */
+    #viewfinder{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;display:none;width:65vw;max-width:260px;aspect-ratio:0.778;transition:aspect-ratio 0.3s ease}
+    #viewfinder.active{display:block}
+    #viewfinder svg{width:100%;height:100%}
+
+    #error-msg{display:none;position:fixed;inset:0;z-index:200;background:#0a0a0a;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:2rem;text-align:center}
+    #error-msg.visible{display:flex}
+    #error-msg h2{color:#ff2222;font-size:1.3rem}
+    #error-msg p{color:#999;font-size:.9rem;max-width:280px;line-height:1.6}
+    #error-msg button{background:#cc0000;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:.95rem;cursor:pointer}
+
+    #btn-album{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:14px;z-index:20;background:rgba(0,0,0,.65);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;backdrop-filter:blur(6px);touch-action:manipulation}
+    #btn-album:active{background:rgba(255,34,34,.7)}
+    #btn-torch{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:14px;z-index:20;display:none;background:rgba(0,0,0,.65);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;backdrop-filter:blur(6px);touch-action:manipulation}
+    #dbg{position:fixed;top:8px;left:8px;z-index:99;font-size:11px;color:#0f0;background:rgba(0,0,0,.8);padding:4px 8px;border-radius:4px;font-family:monospace;display:none;max-width:95vw;line-height:1.5}
+  </style>
+</head>
+<body>
+
+<div id="splash" style="display:none">
+  <h1>💀 SCARE CAM AR</h1>
+  <p>Apunta la cámara a cualquiera de estas imágenes:</p>
+  <div class="previews-grid" id="previews-container">
+    <!-- Se generan dinámicamente -->
+  </div>
+  <p style="font-size:11px;color:#666">Mantén la imagen elegida dentro del visor</p>
+  <button id="start-btn">🎃 Iniciar</button>
+</div>
+
+<div id="error-msg">
+  <h2>⚠️ Sin acceso a cámara</h2>
+  <p>Permite el acceso a la cámara y recarga la página.</p>
+  <button onclick="location.reload()">Reintentar</button>
+</div>
+
+<video id="cam-video" autoplay playsinline muted></video>
+<canvas id="ar-canvas"></canvas>
+
+<!-- Visor que guía al usuario a enfocar la imagen -->
+<div id="viewfinder">
+  <svg viewBox="0 0 100 126" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="98" height="124" rx="4" stroke="rgba(255,255,255,0.5)" stroke-width="1" stroke-dasharray="4 3"/>
+    <!-- Esquinas -->
+    <path d="M1 20 L1 1 L20 1" stroke="#ff2222" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M80 1 L99 1 L99 20" stroke="#ff2222" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M1 106 L1 125 L20 125" stroke="#ff2222" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M80 125 L99 125 L99 106" stroke="#ff2222" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<button id="btn-torch" type="button">🔦 Luz</button>
+<button id="btn-album" type="button">📖 Álbum</button>
+
+<div id="hud"><div id="hud-pill">Centra la imagen en el visor 👁️</div></div>
+<div id="dbg"></div>
+
+<video id="horror-src" loop playsinline muted
+  style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none"></video>
+
+<script>
+// ── Configuración de Parejas Imagen -> Video ──
+// (aspectRatio ya no hace falta: se calcula solo con el tamaño real de cada imagen)
+const MEDIA_PAIRS = [
+  { id:"Osito",    nombre:"Mi corazón te lo regalo.", imageSrc:"Osito.png",       videoSrc:"Osito.mp4",       aspectRatio:1.0 },
+  { id:"Charro",   nombre:"Charro Negro",             imageSrc:"CharroNegro.jpg", videoSrc:"CharroNegro.mp4", aspectRatio:560/870 },
+  { id:"Calavera", nombre:"Calavera",                 imageSrc:"Calavera.png",    videoSrc:"Calavera.mp4",    aspectRatio:560/870 },
+  { id:"Ryze",     nombre:"Ryze",                     imageSrc:"Ryze.jpg",        videoSrc:"Ryze.mp4",        aspectRatio:560/870 },
+  { id:"MM",       nombre:"Michael Myers",            imageSrc:"MM.jpeg",         videoSrc:"MM.mp4",          aspectRatio:560/870 },
+  { id:"Retrato",  nombre:"Retrato Oval",             imageSrc:"Retrato.jpeg",    videoSrc:"Retrato.mp4",     aspectRatio:560/870 },
+  { id:"Spring",   nombre:"Marcador D",               imageSrc:"goku.jpg",        videoSrc:"goku.mp4",        aspectRatio:1.0 }
+];
+
+// ── Parámetros de detección (afínalos con  ?debug  en la URL) ──
+const WORK_W   = 240;   // ancho del frame de trabajo para la búsqueda rápida
+const FINE_N   = 48;    // resolución del parche de verificación (48x48)
+const COARSE_N = 12;    // resolución de la búsqueda rápida (12x12)
+const SCALES   = [0.28,0.38,0.50,0.64,0.80,0.95];
+const DETECT_TH      = 0.50;  // score mínimo (con poca luz baja solo, ver darkness)
+const LOSE_TH        = 0.36;  // por debajo de esto se pierde el seguimiento
+const DARK_RELAX_TH  = 0.15;  // cuánto se relajan DETECT_TH/LOSE_TH en oscuridad total
+const MARGIN         = 0.10;  // el ganador debe superar al 2º por al menos esto
+const GOOD_FRAC      = 0.55;  // fracción mínima de zonas (de 9) que deben coincidir
+const CONFIRM_FRAMES = 3;     // veces que debe ganar la misma imagen (tolera 1 fallo por ruido)
+const MISS_MAX       = 6;
+const SMOOTH         = 0.35;
+const DETECT_MS      = 120;
+
+const DEBUG = location.search.includes('debug');
+const dbg   = document.getElementById('dbg');
+if (DEBUG) dbg.style.display='block';
+
+const splash     = document.getElementById('splash');
+const hud        = document.getElementById('hud');
+const hudPill    = document.getElementById('hud-pill');
+const errorMsg   = document.getElementById('error-msg');
+const camVideo   = document.getElementById('cam-video');
+const arCanvas   = document.getElementById('ar-canvas');
+const horrorSrc  = document.getElementById('horror-src');
+const viewfinder = document.getElementById('viewfinder');
+const ctx        = arCanvas.getContext('2d', { alpha:true });
+
+// Vistas previas en la pantalla Splash
+const previewsContainer = document.getElementById('previews-container');
+MEDIA_PAIRS.forEach(pair => {
+  const frame = document.createElement('div');
+  frame.className = 'img-frame';
+  frame.innerHTML = `<img src="${pair.imageSrc}" alt="${pair.nombre}"/>`;
+  previewsContainer.appendChild(frame);
+});
+
+let active=false, detected=false;
+let activeTarget=null;          // marcador activo
+let trackBox=null;              // {x,y,w,h} en coordenadas del frame de trabajo
+let missCount=0, videoAlpha=0;
+let pending=null;               // candidato esperando confirmación
+let frameLuma=128, darkness=0;  // brillo medio del frame y nivel de oscuridad 0..1
+
+// ── Funciones puras de comparación (descriptores) ──
+function norm(a, minStd){
+  const n=a.length; let s=0;
+  for(let i=0;i<n;i++) s+=a[i];
+  const m=s/n; let v=0;
+  for(let i=0;i<n;i++){ a[i]-=m; v+=a[i]*a[i]; }
+  const sd=Math.sqrt(v/n);
+  if(sd<minStd){ a.fill(0); return false; }   // zona plana: no aporta (evita amplificar ruido)
+  for(let i=0;i<n;i++) a[i]/=sd;
+  return true;
+}
+function dot(a,b){ let s=0; for(let i=0;i<a.length;i++) s+=a[i]*b[i]; return s/a.length; }
+
+// Descriptor de un parche NxN (RGBA): gris, bordes, canales de color y 3x3 bloques
+function makeDesc(data,N){
+  const n=N*N;
+  const raw=new Float32Array(n), r=new Float32Array(n), g=new Float32Array(n), b=new Float32Array(n);
+  for(let i=0;i<n;i++){
+    r[i]=data[i*4]; g[i]=data[i*4+1]; b[i]=data[i*4+2];
+    raw[i]=0.299*r[i]+0.587*g[i]+0.114*b[i];
+  }
+  const edge=new Float32Array(n);
+  for(let y=1;y<N-1;y++) for(let x=1;x<N-1;x++){
+    const i=y*N+x;
+    edge[i]=Math.hypot(raw[i+1]-raw[i-1], raw[i+N]-raw[i-N]);
+  }
+  const B=N/3, blocks=[], blockOK=[];
+  for(let by=0;by<3;by++) for(let bx=0;bx<3;bx++){
+    const arr=new Float32Array(B*B);
+    for(let y=0;y<B;y++) for(let x=0;x<B;x++) arr[y*B+x]=raw[(by*B+y)*N+bx*B+x];
+    blockOK.push(norm(arr,0.8)); blocks.push(arr);
+  }
+  const gray=Float32Array.from(raw);
+  norm(gray,0.8); norm(edge,0.4); norm(r,0.8); norm(g,0.8); norm(b,0.8);
+  return {raw,gray,edge,r,g,b,blocks,blockOK};
+}
+
+// Compara plantilla (t) contra parche de cámara (w). Devuelve score 0..1 aprox.
+function compareDesc(t,w){
+  const gs=dot(t.gray,w.gray);
+  const es=dot(t.edge,w.edge);
+  const cs=(dot(t.r,w.r)+dot(t.g,w.g)+dot(t.b,w.b))/3;
+  let sum=0,cnt=0,good=0;
+  for(let i=0;i<t.blocks.length;i++){
+    if(!t.blockOK[i]) continue;
+    const s=dot(t.blocks[i],w.blocks[i]);
+    sum+=s; cnt++; if(s>0.25) good++;
+  }
+  const blk=cnt?sum/cnt:gs;
+  const goodFrac=cnt?good/cnt:1;
+  // Con poca luz bordes y color son lo más ruidoso: pesan menos; gris y zonas pesan más
+  const score=0.30*gs+0.15*es+0.10*cs+0.45*blk;
+  return {g:gs,e:es,c:cs,blk,goodFrac,score};
+}
+
+// Plantilla gruesa NxN para la búsqueda rápida (promedia bloques de la fina)
+function makeCoarse(desc,FINE,COARSE){
+  const k=FINE/COARSE, out=new Float32Array(COARSE*COARSE);
+  for(let j=0;j<COARSE;j++) for(let i=0;i<COARSE;i++){
+    let s=0;
+    for(let y=0;y<k;y++) for(let x=0;x<k;x++) s+=desc.raw[(j*k+y)*FINE+i*k+x];
+    out[j*COARSE+i]=s/(k*k);
+  }
+  norm(out,0.6);
+  return out;
+}
+
+
+// ── Canvases auxiliares ──
+const MID_N = FINE_N*2;
+const midC = document.createElement('canvas'); midC.width=midC.height=MID_N;
+const midX = midC.getContext('2d',{willReadFrequently:true}); midX.imageSmoothingQuality='high';
+const finC = document.createElement('canvas'); finC.width=finC.height=FINE_N;
+const finX = finC.getContext('2d',{willReadFrequently:true}); finX.imageSmoothingQuality='high';
+
+// Reduce una región de "src" (imagen o video) a un parche FINE_N x FINE_N en 2 pasos
+// (mejor promedio, y se usa igual para plantillas y cámara => comparables)
+function grabDesc(src,sx,sy,sw,sh){
+  midX.drawImage(src,sx,sy,sw,sh,0,0,MID_N,MID_N);
+  finX.drawImage(midC,0,0,MID_N,MID_N,0,0,FINE_N,FINE_N);
+  return makeDesc(finX.getImageData(0,0,FINE_N,FINE_N).data,FINE_N);
+}
+
+// ── Cargar plantillas de todas las imágenes ──
+let markers=[], markersReady=false;
+function loadMarkers(){
+  return Promise.all(MEDIA_PAIRS.map(item => new Promise(res => {
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const desc=grabDesc(img,0,0,img.naturalWidth,img.naturalHeight);
+        markers.push({
+          data:item,
+          ratio:img.naturalWidth/img.naturalHeight,   // proporción REAL de la imagen
+          desc,
+          coarse:makeCoarse(desc,FINE_N,COARSE_N)
+        });
+      }catch(e){ console.error('No se pudo procesar',item.imageSrc,'(¿abres el archivo con file://? usa un servidor local)',e); }
+      res();
+    };
+    img.onerror=()=>{ console.warn('No se pudo cargar',item.imageSrc); res(); };
+    img.src=item.imageSrc;
+  }))).then(()=>{ markersReady=true; if(DEBUG) console.log('Marcadores listos:',markers.map(m=>m.data.id+' '+m.ratio.toFixed(2))); });
+}
+loadMarkers();
+
+// ── Frame de trabajo + imagen integral (promedios por caja en O(1)) ──
+let WORK_H=180;
+const workCanvas=document.createElement('canvas');
+workCanvas.width=WORK_W;
+const workCtx=workCanvas.getContext('2d',{willReadFrequently:true});
+let integ=null;
+const cellBuf=new Float32Array(COARSE_N*COARSE_N);
+
+function buildIntegral(data){
+  const W1=WORK_W+1;
+  if(!integ||integ.length!==W1*(WORK_H+1)) integ=new Float64Array(W1*(WORK_H+1));
+  for(let y=0;y<WORK_H;y++){
+    let row=0;
+    for(let x=0;x<WORK_W;x++){
+      const i=(y*WORK_W+x)*4;
+      row+=0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];
+      integ[(y+1)*W1+x+1]=integ[y*W1+x+1]+row;
+    }
+  }
+  frameLuma=integ[WORK_H*W1+WORK_W]/(WORK_W*WORK_H);
+  // 0 = luz normal (>=110) ... 1 = muy oscuro (<=40)
+  darkness=Math.min(1,Math.max(0,(110-frameLuma)/70));
+}
+
+// Score rápido (gris 12x12) de una ventana contra la plantilla gruesa
+function coarseScore(px,py,ww,wh,tc){
+  const W1=WORK_W+1, N=COARSE_N, cw=ww/N, ch=wh/N;
+  let sum=0,sq=0;
+  for(let j=0;j<N;j++){
+    const y0=Math.round(py+j*ch);
+    const y1=Math.min(WORK_H,Math.max(y0+1,Math.round(py+(j+1)*ch)));
+    for(let i=0;i<N;i++){
+      const x0=Math.round(px+i*cw);
+      const x1=Math.min(WORK_W,Math.max(x0+1,Math.round(px+(i+1)*cw)));
+      const v=(integ[y1*W1+x1]-integ[y0*W1+x1]-integ[y1*W1+x0]+integ[y0*W1+x0])/((x1-x0)*(y1-y0));
+      cellBuf[j*N+i]=v; sum+=v; sq+=v*v;
+    }
+  }
+  const n=N*N, mean=sum/n, sd=Math.sqrt(Math.max(0,sq/n-mean*mean));
+  if(sd<0.6) return 0;
+  let d=0;
+  for(let k=0;k<n;k++) d+=(cellBuf[k]-mean)/sd*tc[k];
+  return d/n;
+}
+
+// Afina posición/escala alrededor de una ventana (paso pequeño)
+function refine(m,c,span){
+  let best={x:c.x,y:c.y,w:c.w,h:c.h,coarse:-1};
+  const cx=c.x+c.w/2, cy=c.y+c.h/2;
+  for(const s of [0.88,0.94,1,1.06,1.12]){
+    const ww=Math.round(c.w*s), wh=Math.round(ww/m.ratio);
+    if(ww>WORK_W||wh>WORK_H||ww<20) continue;
+    const rx=Math.round(ww*span), ry=Math.round(wh*span);
+    const stx=Math.max(1,Math.round(ww*0.03)), sty=Math.max(1,Math.round(wh*0.03));
+    for(let dy=-ry;dy<=ry;dy+=sty) for(let dx=-rx;dx<=rx;dx+=stx){
+      const px=Math.round(cx-ww/2+dx), py=Math.round(cy-wh/2+dy);
+      if(px<0||py<0||px+ww>WORK_W||py+wh>WORK_H) continue;
+      const sc=coarseScore(px,py,ww,wh,m.coarse);
+      if(sc>best.coarse) best={x:px,y:py,w:ww,h:wh,coarse:sc};
+    }
+  }
+  return best.coarse<0 ? null : best;
+}
+
+// Busca el mejor lugar de UN marcador (global si box=null, local si hay seguimiento)
+function searchMarker(m,box){
+  let c;
+  if(!box){
+    c={coarse:-1};
+    for(const sc of SCALES){
+      const ww=Math.round(WORK_W*sc), wh=Math.round(ww/m.ratio);
+      if(wh>WORK_H||ww>WORK_W) continue;
+      const sx=Math.max(3,Math.round(ww*0.12)), sy=Math.max(3,Math.round(wh*0.12));
+      for(let py=0;py+wh<=WORK_H;py+=sy) for(let px=0;px+ww<=WORK_W;px+=sx){
+        const s=coarseScore(px,py,ww,wh,m.coarse);
+        if(s>c.coarse) c={x:px,y:py,w:ww,h:wh,coarse:s};
+      }
+    }
+    if(c.coarse<0) return null;
+    c=refine(m,c,0.08);
+  } else {
+    c=refine(m,box,0.20);
+  }
+  if(!c) return null;
+  c.marker=m;
+  // Verificación fina: parche 48x48 sacado del video a resolución completa
+  const k=camVideo.videoWidth/WORK_W;
+  const w=grabDesc(camVideo,c.x*k,c.y*k,c.w*k,c.h*k);
+  c.fine=compareDesc(m.desc,w);
+  c.score=c.fine.score;
+  return c;
+}
+
+// ── Cámara en poca luz: exposición automática más alta y botón de linterna ──
+const btnTorch=document.getElementById('btn-torch');
+let camTrack=null, torchOn=false;
+async function setupCameraExtras(stream){
+  camTrack=stream.getVideoTracks()[0];
+  let caps={};
+  try{ caps=camTrack.getCapabilities?camTrack.getCapabilities():{}; }catch(e){}
+  const tryApply=async c=>{ try{ await camTrack.applyConstraints({advanced:[c]}); }catch(e){} };
+  if(caps.exposureMode && caps.exposureMode.includes('continuous')) await tryApply({exposureMode:'continuous'});
+  if(caps.focusMode && caps.focusMode.includes('continuous'))       await tryApply({focusMode:'continuous'});
+  if(caps.exposureCompensation) await tryApply({exposureCompensation:caps.exposureCompensation.max*0.6});
+  if(caps.torch) btnTorch.style.display='block';
+}
+btnTorch.addEventListener('click',async()=>{
+  if(!camTrack) return;
+  torchOn=!torchOn;
+  try{ await camTrack.applyConstraints({advanced:[{torch:torchOn}]}); }catch(e){ torchOn=!torchOn; }
+  btnTorch.textContent=torchOn?'🔦 Apagar':'🔦 Luz';
+});
+
+// ── Inicio ──
+async function iniciarAR(){
+  if(!navigator.mediaDevices?.getUserMedia){errorMsg.classList.add('visible');return;}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}
+    });
+    camVideo.srcObject=stream;
+    await camVideo.play();
+    setupCameraExtras(stream);
+    splash.classList.add('hidden');
+    setTimeout(()=>splash.style.display='none',550);
+    camVideo.classList.add('active');
+    arCanvas.classList.add('active');
+    viewfinder.classList.add('active');
+    hud.classList.add('visible');
+    active=true;
+    resizeCanvas();
+    requestAnimationFrame(loop);
+  }catch(e){errorMsg.classList.add('visible');}
+}
+
+function resizeCanvas(){
+  arCanvas.width=window.innerWidth;
+  arCanvas.height=window.innerHeight;
+}
+window.addEventListener('resize',resizeCanvas);
+
+let lastDetect=0;
+function loop(ts){
+  if(!active) return;
+  requestAnimationFrame(loop);
+  ctx.clearRect(0,0,arCanvas.width,arCanvas.height);
+  if(ts-lastDetect>DETECT_MS && markersReady && markers.length>0 && camVideo.readyState>=2){
+    lastDetect=ts; detect();
+  }
+  if(detected) videoAlpha=Math.min(1,videoAlpha+0.08);
+  else         videoAlpha=Math.max(0,videoAlpha-0.18);
+  if(videoAlpha>0.01) renderVideo();
+}
+
+function activate(m,box){
+  activeTarget=m.data;
+  trackBox={x:box.x,y:box.y,w:box.w,h:box.h};
+  viewfinder.style.aspectRatio=m.ratio;
+  horrorSrc.src=activeTarget.videoSrc;
+  horrorSrc.currentTime=0;
+  horrorSrc.load();
+  horrorSrc.play().catch(()=>{});
+  desbloquear(activeTarget.id);
+  hudPill.textContent=`👻 Detectado: ${activeTarget.nombre||activeTarget.id} · añadida al álbum`;
+  hudPill.classList.add('found');
+  viewfinder.style.opacity='0';
+  detected=true; pending=null; missCount=0;
+}
+
+function lose(){
+  detected=false; missCount=0; activeTarget=null; trackBox=null; pending=null;
+  horrorSrc.pause();
+  hudPill.textContent='Centra la imagen en el visor 👁️';
+  hudPill.classList.remove('found');
+  viewfinder.style.opacity='1';
+}
+
+// ── Detección ──
+function detect(){
+  const vw=camVideo.videoWidth, vh=camVideo.videoHeight;
+  if(!vw||!vh) return;
+  WORK_H=Math.round(WORK_W*vh/vw);
+  workCanvas.height=WORK_H;
+  workCtx.drawImage(camVideo,0,0,WORK_W,WORK_H);
+  buildIntegral(workCtx.getImageData(0,0,WORK_W,WORK_H).data);
+
+  if(!detected){
+    // Evaluar TODAS las imágenes y comparar entre ellas
+    const res=[];
+    for(const m of markers){ const c=searchMarker(m,null); if(c) res.push(c); }
+    res.sort((a,b)=>b.score-a.score);
+    const best=res[0], second=res[1];
+
+    if(DEBUG) dbg.innerHTML=res.map(r=>
+      `${r.marker.data.id.padEnd(9)} S:${r.score.toFixed(2)} g:${r.fine.g.toFixed(2)} e:${r.fine.e.toFixed(2)} c:${r.fine.c.toFixed(2)} z:${r.fine.goodFrac.toFixed(2)}`
+    ).join('<br>')+`<br>luz:${frameLuma.toFixed(0)} oscuridad:${darkness.toFixed(2)} umbral:${(DETECT_TH-DARK_RELAX_TH*darkness).toFixed(2)}<br>pend:${pending?pending.id+' x'+pending.n:'-'}`;
+
+    const th   = DETECT_TH - DARK_RELAX_TH*darkness;
+    const gfrac= GOOD_FRAC - 0.15*darkness;
+    const ok = best
+      && best.score>=th
+      && best.fine.goodFrac>=gfrac
+      && (!second || best.score-second.score>=MARGIN);
+
+    if(ok){
+      const id=best.marker.data.id;
+      if(pending && pending.id===id){ pending.n++; pending.box=best; pending.miss=0; }
+      else pending={id,n:1,box:best,miss:0};
+      if(pending.n>=CONFIRM_FRAMES) activate(best.marker,best);
+      else hudPill.textContent='Analizando imagen… 🔍';
+    } else {
+      if(pending && ++pending.miss>1){ pending=null; hudPill.textContent='Centra la imagen en el visor 👁️'; }
+    }
+  } else {
+    // Seguimiento solo del marcador activo
+    const m=markers.find(mm=>mm.data.id===activeTarget.id);
+    const c=m?searchMarker(m,trackBox):null;
+    if(DEBUG) dbg.textContent=`Siguiendo ${activeTarget.id} S:${c?c.score.toFixed(2):'-'} Miss:${missCount}`;
+    if(c && c.score>=LOSE_TH-DARK_RELAX_TH*darkness){
+      missCount=0;
+      trackBox.x+=(c.x-trackBox.x)*SMOOTH; trackBox.y+=(c.y-trackBox.y)*SMOOTH;
+      trackBox.w+=(c.w-trackBox.w)*SMOOTH; trackBox.h+=(c.h-trackBox.h)*SMOOTH;
+    } else if(++missCount>=MISS_MAX){
+      lose();
+    }
+  }
+}
+
+function renderVideo(){
+  if(horrorSrc.readyState<2) return;
+  const vfR=viewfinder.getBoundingClientRect();
+  const fx=vfR.left, fy=vfR.top, fw=vfR.width, fh=vfR.height;
+  const vw=horrorSrc.videoWidth||1920, vh=horrorSrc.videoHeight||1080;
+  const scale=Math.max(fw/vw, fh/vh);
+  const dw=vw*scale, dh=vh*scale;
+  const dx=fx+(fw-dw)*0.5, dy=fy+(fh-dh)*0.5;
+  ctx.save();
+  ctx.globalAlpha=videoAlpha;
+  ctx.beginPath();
+  ctx.rect(fx,fy,fw,fh);
+  ctx.clip();
+  ctx.drawImage(horrorSrc,dx,dy,dw,dh);
+  ctx.restore();
+}
+
+// Guarda la pieza escaneada para que el álbum la desbloquee (misma clave que album.html)
+function desbloquear(id){
+  try{
+    const clave='galeria_desbloqueados';
+    const lista=JSON.parse(localStorage.getItem(clave))||[];
+    if(!lista.includes(id)){ lista.push(id); localStorage.setItem(clave,JSON.stringify(lista)); }
+  }catch(e){}
+}
+
+document.getElementById('btn-album').addEventListener('click',()=>{ location.href='album.html'; });
+document.getElementById('start-btn').addEventListener('click', iniciarAR);
+iniciarAR();
+</script>
+</body>
+</html>
