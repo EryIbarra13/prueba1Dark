@@ -74,6 +74,27 @@ const CATALOGO = [
     pista: "Despierta cada año en halloween",
     enlaces: [{ texto: "Instagram", url: "" }]
   },
+   {
+    id: "Calabaza",
+    categoria: "ilustraciones",
+    nombre: "",
+    imagen: "Calabaza.jpeg",
+    autor: "",
+    descripcion: "",
+    pista: "Las almas al servicio de la gran calabaza",
+    enlaces: [{ texto: "Instagram", url: "" }]
+  },
+   {
+    id: "Cena",
+    categoria: "ilustraciones",
+    nombre: "",
+    imagen: "Cena.jpeg",
+    autor: "",
+    descripcion: "",
+    pista: "Una deliciosa cena",
+    enlaces: [{ texto: "Instagram", url: "" }]
+  },
+   
   {
     id: "Spring",
     categoria: "artilugios",
