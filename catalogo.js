@@ -77,24 +77,53 @@ const CATALOGO = [
    {
     id: "Calabaza",
     categoria: "ilustraciones",
-    nombre: "",
+    nombre: "PUMPKIN — Trick or Treat?",
     imagen: "Calabaza.jpg",
-    autor: "",
-    descripcion: "",
+    autor: "Mahun Herrera",
+    descripcion: "Entre sombras y espíritus, una sonrisa brillante anuncia que Halloween ha llegado.",
     pista: "Las almas al servicio de la gran calabaza",
-    enlaces: [{ texto: "Instagram", url: "" }]
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/mahun_doodles" }]
   },
    {
     id: "Cena",
     categoria: "ilustraciones",
-    nombre: "",
+    nombre: "Huesos y todo",
     imagen: "Cena.jpg",
-    autor: "",
-    descripcion: "",
+    autor: "Aiden Ramos Ceniceros",
+    descripcion: "En realidad ambos están de acuerdo con esta desición, uno dando más que él otro",
     pista: "Una deliciosa cena",
     enlaces: [{ texto: "Instagram", url: "" }]
   },
-   
+   {
+      id: "Transformers",
+    categoria: "ilustraciones",
+    nombre: "Autobot a sustar",
+    imagen: "Transformers.jpg",
+    autor: "Karen Itzel Cedillo Chavez",
+    descripcion: "Este dibujo esta basado en un capitulo de transformers animated una de mis series favoritas del capitulo y llego la araña el cual es uno de mis favoritos por la temática",
+    pista: "Hasta los mejores motores piden dulce o travesura",
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/kirby_cedillo" }]
+   },
+   {
+      id: "Alucard",
+    categoria: "ilustraciones",
+    nombre: "Alucard",
+    imagen: "Alucard.jpg",
+    autor: "Santihrz",
+    descripcion: "Te amaré hasta que no quede nada de ti, y aun entonces, ni la muerte te concederá la libertad de olvidarme",
+    pista: "El reino de los vampiros",
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/santi_goes_on" }]
+   },
+   {
+      id: "Mariposa",
+    categoria: "ilustraciones",
+    nombre: "Mariposa",
+    imagen: "Mariposa.jpg",
+    autor: "",
+    descripcion: "",
+    pista: "",
+    enlaces: [{ texto: "Instagram", url: "" }]
+   },
   {
     id: "Spring",
     categoria: "artilugios",
