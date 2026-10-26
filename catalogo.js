@@ -95,7 +95,7 @@ const CATALOGO = [
     enlaces: [{ texto: "Instagram", url: "" }]
   },
    {
-      id: "Transformers",
+    id: "Transformers",
     categoria: "ilustraciones",
     nombre: "Autobot a sustar",
     imagen: "Transformers.jpg",
@@ -105,7 +105,7 @@ const CATALOGO = [
     enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/kirby_cedillo" }]
    },
    {
-      id: "Alucard",
+    id: "Alucard",
     categoria: "ilustraciones",
     nombre: "Alucard",
     imagen: "Alucard.jpg",
@@ -115,14 +115,24 @@ const CATALOGO = [
     enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/santi_goes_on" }]
    },
    {
-      id: "Mariposa",
+    id: "Mariposa",
     categoria: "ilustraciones",
     nombre: "Mariposa",
-    imagen: "Mariposa.jpg",
+    imagen: "Mariposa.png",
     autor: "",
     descripcion: "",
     pista: "",
     enlaces: [{ texto: "Instagram", url: "" }]
+   },
+   {
+    id: "Myheard",
+    categoria: "ilustraciones",
+    nombre: "Myheard",
+    imagen: "Myheard.png",
+    autor: "Karla Vivar",
+    descripcion: "Se basa en el sentimiento de extrañar a una persona que se fue de la nada y los sentimientos desde la tristeza hasta el enojo del porqué no saber el porqué esa persona se fue",
+    pista: "Un pobre corazón",
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/__hey_kvr_?rpxt=MTg4bjFlY2hycjMwMQ%3D%3D" }]
    },
   {
     id: "Spring",
