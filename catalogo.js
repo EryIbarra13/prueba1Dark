@@ -58,7 +58,7 @@ const CATALOGO = [
     id: "Silend",
     categoria: "ilustraciones",
     nombre: "Hinako",
-    imagen: "Hinkao.jpg",
+    imagen: "Hinako.jpg",
     autor: "Leslie synyster",
     descripcion: "Una ilustración de la protagonista de Silent hill F en estilo fotografía vintage.",
     pista: "Piensa en lo que te atormenta y en lirios rojos.",
