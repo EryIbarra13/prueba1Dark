@@ -119,9 +119,9 @@ const CATALOGO = [
     categoria: "ilustraciones",
     nombre: "Mariposa",
     imagen: "Mariposa.png",
-    autor: "",
-    descripcion: "",
-    pista: "",
+    autor: "GhostBun12",
+    descripcion: "Criatura de la obscuridad de ojos alados",
+    pista: "Esos ojos te ven siempre",
     enlaces: [{ texto: "Instagram", url: "" }]
    },
    {
