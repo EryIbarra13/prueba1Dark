@@ -128,7 +128,7 @@ const CATALOGO = [
     id: "Myheard",
     categoria: "ilustraciones",
     nombre: "Myheard",
-    imagen: "Myheard.png",
+    imagen: "Myheard.jgp",
     autor: "Karla Vivar",
     descripcion: "Se basa en el sentimiento de extrañar a una persona que se fue de la nada y los sentimientos desde la tristeza hasta el enojo del porqué no saber el porqué esa persona se fue",
     pista: "Un pobre corazón",
