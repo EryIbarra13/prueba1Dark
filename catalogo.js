@@ -55,13 +55,13 @@ const CATALOGO = [
     enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/just_an_emo_bird" }]
   },
    {
-    id: "Ryze",
+    id: "Silend",
     categoria: "ilustraciones",
-    nombre: "Ryze",
-    imagen: "Ryze.jpg",
+    nombre: "Hinako",
+    imagen: "Hinkao.jpg",
     autor: "Leslie synyster",
-    descripcion: "Una interpretacion mas realista al personaje Ryze de Tokyo Ghoul.",
-    pista: "Aveces la cita puede dar un cambio brutal.",
+    descripcion: "Una ilustración de la protagonista de Silent hill F en estilo fotografía vintage.",
+    pista: "Piensa en lo que te atormenta y en lirios rojos.",
     enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/digitalpeperonni" }]
   },
    {
@@ -147,12 +147,13 @@ const CATALOGO = [
   {
     id: "jhin",
     categoria: "artilugio",
-    nombre: "Jhin"
-    imagen: "mysterio2.jpg"
-    autor: "Ery Ibarra"
-    descripcion: "Mascara del artista mas loco de Jonia"
-    pista: "SUBLIME"
+    nombre: "Jhin",
+    imagen: "mysterio2.jpg",
+    autor: "Ery Ibarra",
+    descripcion: "Mascara del artista mas loco de Jonia",
+    pista: "SUBLIME",
     enlaces: [{texto: "Instagram", url: "https://www.instagram.com/thesheko13"}]
+  }
   /* Ejemplo de artilugio (quita los comentarios para usarlo):
   ,{
     id: "artilugio_1",
