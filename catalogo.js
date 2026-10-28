@@ -19,8 +19,8 @@ const CATALOGO = [
     categoria: "ilustraciones",
     nombre: "Calavera",
     imagen: "Calavera.png",
-    autor: "Nombre del autor",
-    descripcion: "Descripción de la obra.",
+    autor: "Ilustrador anonimo",
+    descripcion: "Sin descripcion.",
     pista: "Un hermoso esqueleto mientras una mujer lo observa.",
     enlaces: [ /* { texto: "Instagram", url: "https://instagram.com/usuario" } */ ]
   },
@@ -69,10 +69,10 @@ const CATALOGO = [
     categoria: "ilustraciones",
     nombre: "Michael Myers",
     imagen: "MM.jpeg",
-    autor: "",
-    descripcion: "",
+    autor: "Merrybunx",
+    descripcion: "Michael de chill despues de la chamba",
     pista: "Despierta cada año en halloween",
-    enlaces: [{ texto: "Instagram", url: "" }]
+    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/merrybunx" }]
   },
    {
     id: "Calabaza",
@@ -92,7 +92,7 @@ const CATALOGO = [
     autor: "Aiden Ramos Ceniceros",
     descripcion: "En realidad ambos están de acuerdo con esta desición, uno dando más que él otro",
     pista: "Una deliciosa cena",
-    enlaces: [{ texto: "Instagram", url: "" }]
+    enlaces: []
   },
    {
     id: "Transformers",
@@ -128,7 +128,7 @@ const CATALOGO = [
     id: "Myheard",
     categoria: "ilustraciones",
     nombre: "Myheard",
-    imagen: "Myheard.jgp",
+    imagen: "Myheard.jpg",
     autor: "Karla Vivar",
     descripcion: "Se basa en el sentimiento de extrañar a una persona que se fue de la nada y los sentimientos desde la tristeza hasta el enojo del porqué no saber el porqué esa persona se fue",
     pista: "Un pobre corazón",
