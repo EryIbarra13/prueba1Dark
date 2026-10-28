@@ -133,27 +133,7 @@ const CATALOGO = [
     descripcion: "Se basa en el sentimiento de extrañar a una persona que se fue de la nada y los sentimientos desde la tristeza hasta el enojo del porqué no saber el porqué esa persona se fue",
     pista: "Un pobre corazón",
     enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/__hey_kvr_?rpxt=MTg4bjFlY2hycjMwMQ%3D%3D" }]
-   },
-  {
-    id: "Spring",
-    categoria: "artilugios",
-    nombre: "Springtramp",
-    imagen: "goku.jpg",
-    autor: "Ery Ibarra",
-    descripcion: "Cabeza de un animatronico.",
-    pista: "Un extraño sujeto se la puso una vez y no vivio para contarlo.",
-    enlaces: [{ texto: "Instagram", url: "https://www.instagram.com/thesheko13" }]
-   },
-  {
-    id: "jhin",
-    categoria: "artilugio",
-    nombre: "Jhin",
-    imagen: "mysterio2.jpg",
-    autor: "Ery Ibarra",
-    descripcion: "Mascara del artista mas loco de Jonia",
-    pista: "SUBLIME",
-    enlaces: [{texto: "Instagram", url: "https://www.instagram.com/thesheko13"}]
-  }
+   }
   /* Ejemplo de artilugio (quita los comentarios para usarlo):
   ,{
     id: "artilugio_1",
